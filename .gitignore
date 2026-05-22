@@ -34,8 +34,12 @@ yarn-error.log
 !.gitattributes
 !.editorconfig
 !.env.example
-!.npmrc
-!.prettierignore
-!.prettierrc
-!.github/
-!.github/**
+
+# Root helper/config files
+/components.json
+/eslint.config.js
+/phpunit.xml
+/pint.json
+/pnpm-workspace.yaml
+/tsconfig.json
+/vite.config.ts
