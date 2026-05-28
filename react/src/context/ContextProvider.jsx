@@ -5,9 +5,7 @@ import {StateContext} from './StateContext.js';
 const ACCESS_TOKEN_KEY = 'ACCESS_TOKEN';
 //const  TEMP_ACCESS_TOKEN = 123;
 export const ContextProvider = ({children}) => {
-    const [user, setUser] = useState({
-        name: 'Mike'
-    });
+    const [user, setUser] = useState({});
     // raw/internal setter
     const [token, _setToken] = useState(
         localStorage.getItem(ACCESS_TOKEN_KEY),

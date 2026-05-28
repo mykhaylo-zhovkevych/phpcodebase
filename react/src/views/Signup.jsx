@@ -1,5 +1,5 @@
 import {Link} from 'react-router-dom';
-import {useRef} from 'react';
+import { useRef, useState } from "react";
 import {useStateContext} from '../context/StateContext.js';
 import axiosClient from '../axios-client.js';
 
@@ -9,6 +9,8 @@ export default function Signup() {
     const emailRef = useRef();
     const passwordRef = useRef();
     const passwordConfirmationRef = useRef();
+    const [errors, setErrors] = useState(null);
+
 
     const {setUser, setToken} = useStateContext();
 
@@ -31,7 +33,10 @@ export default function Signup() {
                 const response = err.response;
                 // unprocessable content
                 if (response && response.status === 422) {
-                    console.log(response.data.errors);
+                    setErrors(response.data.errors);
+                }
+                else if (response && response.data.message) {
+                        setErrors({ email: [response.data.message] });
                 }
             })
     };
@@ -47,14 +52,31 @@ export default function Signup() {
             </div>
 
             <form onSubmit={onSubmit}>
+                {errors && (
+                    <div className="alert">
+                        {Object.keys(errors).map((key) => (
+                            <p key={key}>{errors[key][0]}</p>
+                        ))}
+                    </div>
+                )}
                 <label>
                     Username
-                    <input ref={nameRef} type="text" name="name" placeholder="Your name" />
+                    <input
+                        ref={nameRef}
+                        type="text"
+                        name="name"
+                        placeholder="Your name"
+                    />
                 </label>
 
                 <label>
                     Email
-                    <input ref={emailRef} type="email" name="email" placeholder="you@example.com" />
+                    <input
+                        ref={emailRef}
+                        type="email"
+                        name="email"
+                        placeholder="you@example.com"
+                    />
                 </label>
 
                 <label>
