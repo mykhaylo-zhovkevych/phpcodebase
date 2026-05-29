@@ -5,7 +5,9 @@ export const StateContext = createContext({
     user: null,
     token: null,
     setUser: () => {},
-    setToken: () => {}
+    setToken: () => {},
+    notification: null,
+    setNotification: () => {}
 });
 
 export const useStateContext = () => useContext(StateContext);

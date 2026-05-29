@@ -5,8 +5,10 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+// API response formatter
 class UserResource extends JsonResource
 {
+    public static $wrap = false;
     /**
      * Transform the resource into an array.
      *
@@ -18,7 +20,7 @@ class UserResource extends JsonResource
           'id' => $this->id,
           'name' => $this->name,
           'email' => $this->email,
-          'created at' => $this->created_at->format('Y-m-d H:i:s'),
+          'created_at' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }
 }

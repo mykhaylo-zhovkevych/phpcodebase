@@ -32,13 +32,13 @@ class UserController extends Controller
         $data['password'] = bcrypt($data['password']);
         $user = User::create($data);
         //New Data
-        return respone(new UserResource($user), 201);
+        return response(new UserResource($user), 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(StoreUserRequest $user)
+    public function show(User $user)
     {
         return new UserResource($user);
     }
@@ -49,7 +49,9 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user)
     {
         $data = $request->validated();
-        if(isset($data['password'])) {
+        if(empty($data['password'])) {
+            unset($data['password']);
+        } else {
             $data['password'] = bcrypt($data['password']);
         }
         $user->update($data);

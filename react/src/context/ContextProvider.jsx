@@ -6,6 +6,7 @@ const ACCESS_TOKEN_KEY = 'ACCESS_TOKEN';
 //const  TEMP_ACCESS_TOKEN = 123;
 export const ContextProvider = ({children}) => {
     const [user, setUser] = useState({});
+    const [notification, _setNotification] = useState(null);
     // raw/internal setter
     const [token, _setToken] = useState(
         localStorage.getItem(ACCESS_TOKEN_KEY),
@@ -21,11 +22,20 @@ export const ContextProvider = ({children}) => {
         }
     };
 
+    const setNotification = (message) => {
+        _setNotification(message);
+        setTimeout(() => {
+            _setNotification(null);
+        }, 5000);
+    };
+
     return <StateContext.Provider value={{
         user,
         token,
         setUser,
-        setToken
+        setToken,
+        notification,
+        setNotification
     }}>
         {children}
     </StateContext.Provider>;

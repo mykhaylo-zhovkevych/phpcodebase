@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -23,14 +25,17 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'name'=> 'required|string|max:55',
-            // all ids check except my id
-            'email'=> 'required|email|unique:users,email,',$this->id,
+            'name'=> 'required|string|max:55',
+            'email'=> [
+                'required',
+                'email',
+                // Email must be unique, except for this current user
+                Rule::unique('users', 'email')->ignore($this->route('user')),
+            ],
             'password'=> [
-            'confirmed',
-            Password::min(8)
-                ->letters()
-                ->symbols()
+                'nullable',
+                'confirmed',
+                Password::min(8)->letters()->symbols()
             ]
         ];
     }
