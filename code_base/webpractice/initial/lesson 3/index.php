@@ -56,6 +56,7 @@
 
     <div class="box">
         <?php
+        // Superglobals
         $test = $_GET["test"];
 
         if ($test === "include") {
