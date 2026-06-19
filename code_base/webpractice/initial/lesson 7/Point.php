@@ -1,6 +1,5 @@
 <?php
 
-#[AllowDynamicProperties]
 class Point
 {
     private float $x;
