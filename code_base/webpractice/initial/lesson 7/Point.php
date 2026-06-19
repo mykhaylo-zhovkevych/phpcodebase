@@ -4,6 +4,7 @@ class Point
 {
     private float $x;
     private float $y;
+    public static $tmp = 10;
 
     public function __construct(float $x, float $y)
     {

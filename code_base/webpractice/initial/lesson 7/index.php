@@ -56,6 +56,10 @@ $averageFromChild = $teachingPoint->averageFromChild(...$values);
 </p>
 
 <p>
+    Global variable: <?= Point::$tmp?>
+</p>
+
+<p>
     Middle point: <?= $middlePoint->describe() ?>
 </p>
 
