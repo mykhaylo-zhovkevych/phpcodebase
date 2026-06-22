@@ -1,0 +1,5 @@
+Line 1: Hello from file.txt
+Line 2: This file contains normal text.
+Line 3: PHP can open, read, write, and close files.
+Line 4: File handling is useful for logs, notes, and simple storage.
+Line 5: End of the test file.
