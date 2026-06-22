@@ -43,3 +43,5 @@ yarn-error.log
 /pnpm-workspace.yaml
 /tsconfig.json
 /vite.config.ts
+
+/resources/
