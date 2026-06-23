@@ -4,9 +4,9 @@ session_start();
 
 // Constants for database connection
 define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'coffee');
+define('DB_USER', 'exampledb');
 define('DB_PASSWORD', 'secret');
-define('DATABASE_NAME', 'coffeedb');
+define('DATABASE_NAME', 'exampledb');
 
 class AdminInitializer
 {
@@ -101,10 +101,12 @@ if (!$is_admin && $_SERVER['REQUEST_METHOD'] === 'POST' && $requestPath === '/lo
     $loginError = loginAdmin($db, $_POST);
 }
 
-$books = getBooks($db);
+$books = getAllItems($db);
+$selectedTopic = $_GET['topic'] ?? '';
+$filteredBooks = fillterBookByTopic($books, $selectedTopic);
 
 if ($is_admin && $requestPath === '/edit-book') {
-    $id = (int) ($_GET['id'] ?? $_POST['id'] ?? 0);
+    $id = (int) ($_GET['id'] ?? 0);
 
     if ($id <= 0) {
         header('Location: /admin');
@@ -197,7 +199,7 @@ function loginAdmin(mysqli $db, array $formData): string
     }
 }
 
-function getBooks(mysqli $db): array
+function getAllItems(mysqli $db): array
 {
     return mysqli_fetch_all(mysqli_query($db, "SELECT * FROM books"), MYSQLI_ASSOC);
 }
@@ -256,6 +258,18 @@ function updateBook(mysqli $db, array $formData): string
     }
 }
 
+function fillterBookByTopic(array $books, string $topic): array
+{
+    if (empty($topic)) {
+        return $books;
+    }
+
+    return array_filter($books, function ($book) use ($topic) {
+        return $book['topic'] === $topic;
+    });
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -268,52 +282,62 @@ function updateBook(mysqli $db, array $formData): string
 </head>
 <body class="abtialiased bg-gray-100">
     <?php if ($is_admin && $requestPath == '/admin') : ?>
-        <section>
-            <div>
-                <h1>Admin Page</h1>
-                <p>Welcome to the admin page. Here you can manage the books.</p>
+        <section data-page="/admin" class="min-h-screen bg-slate-100 py-8">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-950">Book Admin</h1>
+                        <p class="mt-1 text-sm text-slate-600">Manage titles, authors, topics, and book details.</p>
+                    </div>
 
-                <a href="/add-new-book" class="text-blue-500 hover:underline">Add New Book</a>
+                    <a href="/add-new-book" class="inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+                        Add New Book
+                    </a>
+                </div>
 
-                <table class="min-w-full bg-white border border-gray-300">
-                    <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Topic</th>
-                        <th>Address Optional</th>
-                        <th>Rating</th>
-                        <th>Published Date</th>
-                        <th>Book Type</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($books as $book): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($book['title']) ?></td>
-                            <td><?= htmlspecialchars($book['author']) ?></td>
-                            <td><?= htmlspecialchars($book['topic']) ?></td>
-                            <td><?= htmlspecialchars($book['address_optional'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($book['rating']) ?></td>
-                            <td><?= htmlspecialchars($book['published_date'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($book['book_type'] ?? '') ?></td>
-                            <td>
-                                <a href="/edit-book?id=<?= htmlspecialchars($book['id']) ?>" class="text-blue-500 hover:underline">Edit</a>
-                                <form method="post" action="/delete-book" style="display:inline;">
-                                    <input type="hidden" name="id" value="<?= htmlspecialchars($book['id']) ?>">
-                                    <button type="submit" class="text-red-500 hover:underline" onclick="return confirm('Are you sure you want to delete this book?')">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Title</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Author</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Topic</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Address Optional</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Rating</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Published Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Book Type</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 bg-white">
+                            <?php foreach ($books as $book): ?>
+                                <tr class="transition hover:bg-slate-50">
+                                    <td class="whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-950"><?= htmlspecialchars($book['title']) ?></td>
+                                    <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['author']) ?></td>
+                                    <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['topic']) ?></td>
+                                    <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-500"><?= htmlspecialchars($book['address_optional'] ?? '') ?></td>
+                                    <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['rating']) ?> / 5</td>
+                                    <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['published_date'] ?? '') ?></td>
+                                    <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['book_type'] ?? '') ?></td>
+                                    <td class="whitespace-nowrap px-4 py-4 text-right text-sm">
+                                        <a href="/edit-book?id=<?= htmlspecialchars($book['id']) ?>" class="font-semibold text-blue-600 transition hover:text-blue-800">Edit</a>
+                                        <form method="post" action="/delete-book" class="ml-3 inline">
+                                            <input type="hidden" name="id" value="<?= htmlspecialchars($book['id']) ?>">
+                                            <button type="submit" class="font-semibold text-red-600 transition hover:text-red-800" onclick="return confirm('Are you sure you want to delete this book?')">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
     <?php elseif ($is_admin && $requestPath == '/add-new-book') : ?>
-        <section class="py-12">
-            <div class="container mx-auto px-4">
+        <section data-page="/add-new-book" class="py-12">
+            <div class="container mx-auto p-8">
                 <h1 class="text-2xl font-bold mb-6">Add New Book</h1>
 
                 <?php if (!empty($create_book_error)) : ?>
@@ -368,7 +392,7 @@ function updateBook(mysqli $db, array $formData): string
             </div>
         </section>
         <?php elseif (!$is_admin && $requestPath == '/login') : ?>
-            <section class="py-12">
+            <section data-page="/login" class="py-12">
                 <div class="container mx-auto px-4">
                     <h1 class="text-2xl font-bold mb-6">Admin Login</h1>
 
@@ -394,7 +418,7 @@ function updateBook(mysqli $db, array $formData): string
                 </div>
             </section>
             <?php elseif ($is_admin && $requestPath === '/edit-book'): ?>
-                <section class="py-12">
+                <section data-page="/edit-book" class="py-12">
                     <div class="container mx-auto px-4">
                         <h1 class="text-2xl font-bold mb-6">Edit Book</h1>
 
@@ -446,11 +470,61 @@ function updateBook(mysqli $db, array $formData): string
                         </form>
                     </div>
                 </section>
+        <?php elseif ($requestPath === '/book-details'): ?>
+            <section data-page="/book-details" class="py-12 bg-gray-300">
+                <div class="container mx-auto px-4">
+                    <?php
+                        $id = (int) ($_GET['id'] ?? 0);
+                        $book_detail = findBookById($db, $id);
+
+                        if (!$book_detail) {
+                            echo "<p>Book not found.</p>";
+                        } else {
+                        ?>
+                        <h1 class="text-2xl font-bold mb-6"><?= htmlspecialchars($book_detail['title']) ?></h1>
+                        <p><strong>Author:</strong> <?= htmlspecialchars($book_detail['author']) ?></p>
+                        <p><strong>Topic:</strong> <?= htmlspecialchars($book_detail['topic']) ?></p>
+                        <p><strong>Address Optional:</strong> <?= htmlspecialchars($book_detail['address_optional'] ?? '') ?></p>
+                        <p><strong>Rating:</strong> <?= htmlspecialchars($book_detail['rating']) ?></p>
+                        <p><strong>Published Date:</strong> <?= htmlspecialchars($book_detail['published_date'] ?? '') ?></p>
+                        <p><strong>Book Type:</strong> <?= htmlspecialchars($book_detail['book_type'] ?? '') ?></p>
+                        <?php if (!empty($book_detail['image_url'])): ?>
+                            <img src="<?= htmlspecialchars($book_detail['image_url']) ?>" alt="<?= htmlspecialchars($book_detail['title']) ?>" class="mt-4 w-full max-w-md">
+                        <?php endif; ?>
+                        <?php if (!empty($book_detail['resource_url'])): ?>
+                            <p class="mt-4"><a href="<?= htmlspecialchars($book_detail['resource_url']) ?>" target="_blank" class="text-blue-600 hover:underline">Access Resource</a></p>
+                        <?php else: ?>
+                            <p class="mt-4 text-red-600">No resource available for this book.</p>
+                        <?php endif; ?>
+                    <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onclick="window.location.href='/'">Go back to the list </button>
+                    <?php } ?>
+                </div>
+            </section>
         <?php else: ?>
         <main>
-            <div class="container mx-auto px-4">
+            <section data-page="/" class="container mx-auto p-8">
+                <section class="mb-8">
+                    <h1 class="text-2xl font-bold mb-4">Introduction to philosophy</h1>
+                    <p>Welcome to the Courses Library. Browse through collection of free courses.</p>
+                </section>
+                <section class="mb-8">
+                    <form method="GET" action="/" class="container mx-auto px-2">
+                        <div class="flex flex-wrap -mx-2 md:w-1/2 px-2 bg-white p-4 rounded shadow">
+                            <select id="topic" class="w-full rounded px-3 py-2" name="topic" onchange="this.form.submit()">
+                                <option value="">All Topics</option>
+                                    <?php
+                                        $topics = array_unique(array_map(fn($book) => $book['topic'], $books));
+                                        foreach ($topics as $topic): ?>
+                                            <option value="<?= htmlspecialchars($topic) ?>" <?= $selectedTopic === $topic ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($topic) ?>
+                                            </option>
+                                    <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </form>
+                </section>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <?php foreach ($books as $book): ?>
+                    <?php foreach ($filteredBooks as $book): ?>
                     <div class="bg-white p-4 rounded shadow">
                         <img src="<?= htmlspecialchars($book['image_url']) ?>" alt="<?= htmlspecialchars($book['title']) ?>" class="w-full h-48 object-cover rounded mb-4">
                             <div class="p-6">
@@ -465,15 +539,28 @@ function updateBook(mysqli $db, array $formData): string
                                     <?php if (!empty($book['address_optional'])): ?>
                                         <p class="text-gray-600"><?= htmlspecialchars($book['address_optional']) ?></p>
                                     <?php endif; ?>
+                                <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onclick="window.location.href='/book-details?id=<?= htmlspecialchars($book['id']) ?>'">View Details</button>
                             </div>
                     </div>
                 <?php endforeach; ?>
             </div>
-        </div>
-
+        </section>
     </main>
     <?php endif; ?>
-
-
 </body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const currentPath = window.location.pathname;
+
+    document.querySelectorAll('[data-page]').forEach((section) => {
+            const pagePath = section.dataset.page;
+            if (pagePath === currentPath) {
+                section.classList.add('active');
+            } else {
+                section.classList.remove('active');
+            }
+         });
+    }); 
+</script>
 </html>
