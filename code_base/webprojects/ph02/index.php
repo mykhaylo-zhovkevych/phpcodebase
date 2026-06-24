@@ -4,9 +4,10 @@ session_start();
 
 // Constants for database connection
 define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'example');
+define('DB_USER', 'exampledb');
 define('DB_PASSWORD', 'secret');
 define('DATABASE_NAME', 'exampledb');
+
 
 class AdminInitializer
 {
@@ -477,7 +478,7 @@ function fillterBookByTopic(array $books, string $topic): array
                                 <input type="url" id="resource_url_optional" name="resource_url_optional" value="<?= htmlspecialchars($book_detail['resource_url_optional'] ?? '') ?>" class="w-full border border-gray-300 rounded px-3 py-2">
                             </div>
 
-                            <button type="submit" name="edit_book" value="1" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Book</button>
+                            <button type="submit" name="edit_book" value="1" class="inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">Update Book</button>
                         </form>
                     </div>
                 </section>
@@ -517,7 +518,7 @@ function fillterBookByTopic(array $books, string $topic): array
                 <div class="container mx-auto p-8">
                 <section class="mb-8">
                     <h1 class="text-2xl font-bold mb-4">Introduction to philosophy</h1>
-                    <p>Welcome to the "Courses Library". Browse through collection of free courses.</p>
+                    <p>Welcome to the "Resource Library". Browse through collection of free courses.</p>
                 </section>
                 <section class="mb-8">
                     <div class="container mx-auto px-2">
