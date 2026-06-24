@@ -4,7 +4,7 @@ session_start();
 
 // Constants for database connection
 define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'exampledb');
+define('DB_USER', 'example');
 define('DB_PASSWORD', 'secret');
 define('DATABASE_NAME', 'exampledb');
 
@@ -20,7 +20,7 @@ class AdminInitializer
     public function initialize(): void
     {
         $this->createAdminTableIfMissing();
-        $this->createAdminIfMissing('mz', '');
+        $this->createAdminIfMissing('mz', '=y3&E)VM:JzqX');
         $this->createAdminIfMissing('ad', '');
     }
 
@@ -42,13 +42,11 @@ class AdminInitializer
         $stmt = mysqli_prepare($this->db, "SELECT id FROM admins WHERE username = ? LIMIT 1");
         mysqli_stmt_bind_param($stmt, 's', $username);
         mysqli_stmt_execute($stmt);
-        
         mysqli_stmt_store_result($stmt);
 
-        switch (mysqli_stmt_num_rows($stmt) > 0) {
-            case true:
-                mysqli_stmt_close($stmt);
-                return;
+        if (mysqli_stmt_num_rows($stmt) > 0) {
+            mysqli_stmt_close($stmt);
+            return;
         }
 
         mysqli_stmt_close($stmt);
@@ -130,6 +128,7 @@ function createBook(mysqli $db, array $formData, array $files): string
     $rating = $formData['rating'] ?? '';
     $publishedDate = $formData['published_date'] ?? '';
     $bookType = $formData['book_type'] ?? '';
+    $resourceUrl = $formData['resource_url_optional'] ?? '';
 
     switch (true) {
         case empty($title) || empty($author) || empty($topic) || $rating === '' || !is_numeric($rating) || empty($publishedDate) || empty($bookType):
@@ -144,17 +143,16 @@ function createBook(mysqli $db, array $formData, array $files): string
             $uploadDir = 'uploads/';
             $uploadFilePath = $uploadDir . $imageName;
 
-            switch (is_dir($uploadDir)) {
-                case false:
-                    mkdir($uploadDir, 0755, true);
-                    break;
-            }
+
+            if (!is_dir($uploadDir)) { 
+                    mkdir($uploadDir, 0755, true); 
+                }
 
             switch (move_uploaded_file($imageTmpPath, $uploadFilePath)) {
                 case true:
                     $rating = (float) $rating;
-                    $stmt = mysqli_prepare($db, "INSERT INTO books (title, author, topic, address_optional, rating, published_date, book_type, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                    mysqli_stmt_bind_param($stmt, 'ssssdsss', $title, $author, $topic, $addressOptional, $rating, $publishedDate, $bookType, $uploadFilePath);
+                    $stmt = mysqli_prepare($db, "INSERT INTO books (title, author, topic, address_optional, rating, published_date, book_type, image_url, resource_url_optional) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    mysqli_stmt_bind_param($stmt, 'ssssdssss', $title, $author, $topic, $addressOptional, $rating, $publishedDate, $bookType, $uploadFilePath, $resourceUrl);
                     mysqli_stmt_execute($stmt);
                     mysqli_stmt_close($stmt);
 
@@ -171,13 +169,11 @@ function deleteBook(mysqli $db, array $formData): void
 {
     $id = (int) ($formData['id'] ?? 0);
 
-    switch ($id > 0) {
-        case true:
-            $stmt = mysqli_prepare($db, "DELETE FROM books WHERE id = ?");
-            mysqli_stmt_bind_param($stmt, 'i', $id);
-            mysqli_stmt_execute($stmt);
-            mysqli_stmt_close($stmt);
-            break;
+    if ($id > 0) {
+        $stmt = mysqli_prepare($db, "DELETE FROM books WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
     }
 
     header("Location: /admin");
@@ -189,7 +185,7 @@ function loginAdmin(mysqli $db, array $formData): string
     $username = $formData['username'] ?? '';
     $password = $formData['password'] ?? '';
 
-    if($admin = authenticateAdmin($db, $username, $password)) {
+    if ($admin = authenticateAdmin($db, $username, $password)) {
         $_SESSION['is_admin'] = true;
         $_SESSION['admin_id'] = $admin['id'];
         header("Location: /admin");
@@ -241,6 +237,7 @@ function updateBook(mysqli $db, array $formData): string
     $rating = $formData['rating'] ?? '';
     $publishedDate = $formData['published_date'] ?? '';
     $bookType = $formData['book_type'] ?? '';
+    $resourceUrl = $formData['resource_url_optional'] ?? '';
 
     switch (true) {
         case $id <= 0 || empty($title) || empty($author) || empty($topic) || $rating === '' || !is_numeric($rating) || empty($publishedDate) || empty($bookType):
@@ -248,8 +245,8 @@ function updateBook(mysqli $db, array $formData): string
 
         default:
             $rating = (float) $rating;
-            $stmt = mysqli_prepare($db, "UPDATE books SET title = ?, author = ?, topic = ?, address_optional = ?, rating = ?, published_date = ?, book_type = ? WHERE id = ?");
-            mysqli_stmt_bind_param($stmt, 'ssssdssi', $title, $author, $topic, $addressOptional, $rating, $publishedDate, $bookType, $id);
+            $stmt = mysqli_prepare($db, "UPDATE books SET title = ?, author = ?, topic = ?, address_optional = ?, rating = ?, published_date = ?, book_type = ?, resource_url_optional = ? WHERE id = ?");
+            mysqli_stmt_bind_param($stmt, 'ssssdsssi', $title, $author, $topic, $addressOptional, $rating, $publishedDate, $bookType, $resourceUrl, $id);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
 
@@ -278,15 +275,15 @@ function fillterBookByTopic(array $books, string $topic): array
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <title>Book Library</title>
+    <title>Course Library</title>
 </head>
-<body class="abtialiased bg-gray-100">
+<body class="antialiased bg-[#b4b4b4]">
     <?php if ($is_admin && $requestPath == '/admin') : ?>
-        <section data-page="/admin" class="min-h-screen bg-slate-100 py-8">
+        <section data-page="/admin" class="min-h-screen bg-[#dddddd] py-8 antialiased">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 class="text-3xl font-bold text-slate-950">Book Admin</h1>
+                        <h1 class="text-3xl font-bold text-slate-950">Admin Panel</h1>
                         <p class="mt-1 text-sm text-slate-600">Manage titles, authors, topics, and book details.</p>
                     </div>
 
@@ -295,10 +292,10 @@ function fillterBookByTopic(array $books, string $topic): array
                     </a>
                 </div>
 
-                <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div class="overflow-hidden rounded-lg border border-slate-300 bg-[#e8e8e8] shadow-sm">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-slate-200">
-                            <thead class="bg-slate-50">
+                            <thead class="bg-[#e8e8e8]">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Title</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Author</th>
@@ -307,12 +304,13 @@ function fillterBookByTopic(array $books, string $topic): array
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Rating</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Published Date</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Book Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Resource URL</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 bg-white">
+                        <tbody class="divide-y divide-slate-300 bg-[#e8e8e8]">
                             <?php foreach ($books as $book): ?>
-                                <tr class="transition hover:bg-slate-50">
+                                <tr class="transition hover:bg-[#f3f3f3]">
                                     <td class="whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-950"><?= htmlspecialchars($book['title']) ?></td>
                                     <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['author']) ?></td>
                                     <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['topic']) ?></td>
@@ -320,11 +318,14 @@ function fillterBookByTopic(array $books, string $topic): array
                                     <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['rating']) ?> / 5</td>
                                     <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['published_date'] ?? '') ?></td>
                                     <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"><?= htmlspecialchars($book['book_type'] ?? '') ?></td>
+                                    <td class="whitespace-nowrap px-4 py-4 text-sm font-semibold <?= !empty($book['resource_url_optional']) ? 'text-green-600' : 'text-red-600' ?>">
+                                        <?= !empty($book['resource_url_optional']) ? 'Yes' : 'No' ?>
+                                    </td>
                                     <td class="whitespace-nowrap px-4 py-4 text-right text-sm">
                                         <a href="/edit-book?id=<?= htmlspecialchars($book['id']) ?>" class="font-semibold text-blue-600 transition hover:text-blue-800">Edit</a>
                                         <form method="post" action="/delete-book" class="ml-3 inline">
                                             <input type="hidden" name="id" value="<?= htmlspecialchars($book['id']) ?>">
-                                            <button type="submit" class="font-semibold text-red-600 transition hover:text-red-800" onclick="return confirm('Are you sure you want to delete this book?')">Delete</button>
+                                            <button type="submit" class="font-semibold cursor-pointer text-red-600 transition hover:text-red-800" onclick="return confirm('Are you sure you want to delete this book?')">Delete</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -336,7 +337,7 @@ function fillterBookByTopic(array $books, string $topic): array
             </div>
         </section>
     <?php elseif ($is_admin && $requestPath == '/add-new-book') : ?>
-        <section data-page="/add-new-book" class="py-12">
+        <section data-page="/add-new-book" class="min-h-screen bg-[#dddddd] py-12 antialiased">
             <div class="container mx-auto p-8">
                 <h1 class="text-2xl font-bold mb-6">Add New Book</h1>
 
@@ -346,53 +347,58 @@ function fillterBookByTopic(array $books, string $topic): array
                     </div>
                 <?php endif; ?>
 
-                <form method="post" action="/add-new-book" enctype="multipart/form-data">
+                <form method="post" action="/add-new-book" enctype="multipart/form-data" class="rounded bg-[#e8e8e8] p-6">
                     <div class="mb-4">
                         <label for="title" class="block text-gray-700">Title</label>
-                        <input type="text" id="title" name="title" required class="w-full border border-gray-300 rounded px-3 py-2">
+                        <input type="text" id="title" name="title" required class="w-full border border-black rounded px-3 py-2">
                     </div>
 
                     <div class="mb-4">
                         <label for="author" class="block text-gray-700">Author</label>
-                        <input type="text" id="author" name="author" required class="w-full border border-gray-300 rounded px-3 py-2">
+                        <input type="text" id="author" name="author" required class="w-full border border-black rounded px-3 py-2">
                     </div>
 
                     <div class="mb-4">
                         <label for="topic" class="block text-gray-700">Topic</label>
-                        <input type="text" id="topic" name="topic" required class="w-full border border-gray-300 rounded px-3 py-2">
+                        <input type="text" id="topic" name="topic" required class="w-full border border-black rounded px-3 py-2">
                     </div>
 
                     <div class="mb-4">
                         <label for="address_optional" class="block text-gray-700">Address Optional</label>
-                        <input type="text" id="address_optional" name="address_optional" class="w-full border border-gray-300 rounded px-3 py-2">
+                        <input type="text" id="address_optional" name="address_optional" class="w-full border border-black rounded px-3 py-2">
                     </div>
 
                     <div class="mb-4">
                         <label for="rating" class="block text-gray-700">Rating</label>
-                        <input type="number" id="rating" name="rating" min="0" max="5" step="0.1" required class="w-full border border-gray-300 rounded px-3 py-2">
+                        <input type="number" id="rating" name="rating" min="0" max="5" step="0.1" required class="w-full border border-black rounded px-3 py-2">
                     </div>
 
                     <div class="mb-4">
                         <label for="published_date" class="block text-gray-700">Published Date</label>
-                        <input type="text" id="published_date" name="published_date" required class="w-full border border-gray-300 rounded px-3 py-2">
+                        <input type="text" id="published_date" name="published_date" required class="w-full border border-black rounded px-3 py-2">
                     </div>
 
                     <div class="mb-4">
-                        <label for="book_type" class="block text-gray-700">Book Type</label>
-                        <input type="text" id="book_type" name="book_type" required class="w-full border border-gray-300 rounded px-3 py-2">
+                        <label for="book_type" class="block text-gray-700">Type</label>
+                        <input type="text" id="book_type" name="book_type" required class="w-full border border-black rounded px-3 py-2">
                     </div>
 
                     <div class="mb-4">
                         <label for="image" class="block text-gray-700">Cover Image</label>
-                        <input type="file" id="image" name="image" accept="image/*" required class="w-full border border-gray-300 rounded px-3 py-2">
+                        <input type="file" id="image" name="image" accept="image/*" required class="w-full border border-black rounded px-3 py-2">
                     </div>
 
-                    <button type="submit" name="create_book" value="1" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Add Book</button>
+                    <div class="mb-4">
+                        <label for="resource_url_optional" class="block text-gray-700">Resource URL Optional</label>
+                        <input type="url" id="resource_url_optional" name="resource_url_optional" class="w-full border border-black rounded px-3 py-2">
+                    </div>
+
+                    <button type="submit" name="create_book" value="1" class="inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">Add Book</button>
                 </form>
             </div>
         </section>
         <?php elseif (!$is_admin && $requestPath == '/login') : ?>
-            <section data-page="/login" class="py-12">
+            <section data-page="/login" class="min-h-screen bg-[#dddddd] py-12 antialiased">
                 <div class="container mx-auto px-4">
                     <h1 class="text-2xl font-bold mb-6">Admin Login</h1>
 
@@ -402,23 +408,23 @@ function fillterBookByTopic(array $books, string $topic): array
                         </div>
                     <?php endif; ?>
 
-                    <form method="post" action="/login">
+                    <form method="post" action="/login" class="rounded bg-[#e8e8e8] p-6">
                         <div class="mb-4">
                             <label for="username" class="block text-gray-700">Username</label>
-                            <input type="text" id="username" name="username" required class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="text" id="username" name="username" required class="w-full border border-black rounded px-3 py-2">
                         </div>
 
                         <div class="mb-4">
                             <label for="password" class="block text-gray-700">Password</label>
-                            <input type="password" id="password" name="password" required class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="password" id="password" name="password" required class="w-full border border-black rounded px-3 py-2">
                         </div>
 
-                        <button type="submit" name="login" value="1" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Login</button>
+                        <button type="submit" name="login" value="1" class="inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">Login</button>
                     </form>
                 </div>
             </section>
             <?php elseif ($is_admin && $requestPath === '/edit-book'): ?>
-                <section data-page="/edit-book" class="py-12">
+                <section data-page="/edit-book" class="min-h-screen bg-[#dddddd] py-12 antialiased">
                     <div class="container mx-auto px-4">
                         <h1 class="text-2xl font-bold mb-6">Edit Book</h1>
 
@@ -428,7 +434,7 @@ function fillterBookByTopic(array $books, string $topic): array
                             </div>
                         <?php endif; ?>
 
-                        <form method="post" action="/edit-book" enctype="multipart/form-data">
+                        <form method="post" action="/edit-book" enctype="multipart/form-data" class="rounded bg-[#e8e8e8] p-6">
                             <input type="hidden" name="id" value="<?= htmlspecialchars($book_detail['id']) ?>">
 
                             <div class="mb-4">
@@ -466,12 +472,17 @@ function fillterBookByTopic(array $books, string $topic): array
                                 <input type="text" id="book_type" name="book_type" value="<?= htmlspecialchars($book_detail['book_type'] ?? '') ?>" required class="w-full border border-gray-300 rounded px-3 py-2">
                             </div>
 
+                            <div class="mb-4">
+                                <label for="resource_url_optional" class="block text-gray-700">Resource URL Optional</label>
+                                <input type="url" id="resource_url_optional" name="resource_url_optional" value="<?= htmlspecialchars($book_detail['resource_url_optional'] ?? '') ?>" class="w-full border border-gray-300 rounded px-3 py-2">
+                            </div>
+
                             <button type="submit" name="edit_book" value="1" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Book</button>
                         </form>
                     </div>
                 </section>
         <?php elseif ($requestPath === '/book-details'): ?>
-            <section data-page="/book-details" class="py-12 bg-gray-300">
+            <section data-page="/book-details" class="min-h-screen bg-[#e8e8e8] py-12 antialiased">
                 <div class="container mx-auto px-4">
                     <?php
                         $id = (int) ($_GET['id'] ?? 0);
@@ -491,41 +502,49 @@ function fillterBookByTopic(array $books, string $topic): array
                         <?php if (!empty($book_detail['image_url'])): ?>
                             <img src="<?= htmlspecialchars($book_detail['image_url']) ?>" alt="<?= htmlspecialchars($book_detail['title']) ?>" class="mt-4 w-full max-w-md">
                         <?php endif; ?>
-                        <?php if (!empty($book_detail['resource_url'])): ?>
-                            <p class="mt-4"><a href="<?= htmlspecialchars($book_detail['resource_url']) ?>" target="_blank" class="text-blue-600 hover:underline">Access Resource</a></p>
+                        <?php if (!empty($book_detail['resource_url_optional'])): ?>
+                            <p class="mt-4"><a href="<?= htmlspecialchars($book_detail['resource_url_optional']) ?>" target="_blank" class="text-blue-600 hover:underline">Access Resource</a></p>
                         <?php else: ?>
                             <p class="mt-4 text-red-600">No resource available for this book.</p>
                         <?php endif; ?>
-                    <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onclick="window.location.href='/'">Go back to the list </button>
+                    <button class="mt-4 inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800" onclick="window.location.href='/'">Go back to the list</button>
                     <?php } ?>
                 </div>
             </section>
         <?php else: ?>
         <main>
-            <section data-page="/" class="container mx-auto p-8">
+            <section data-page="/" class="min-h-screen bg-[#f3f3f3] antialiased">
+                <div class="container mx-auto p-8">
                 <section class="mb-8">
                     <h1 class="text-2xl font-bold mb-4">Introduction to philosophy</h1>
-                    <p>Welcome to the Courses Library. Browse through collection of free courses.</p>
+                    <p>Welcome to the "Courses Library". Browse through collection of free courses.</p>
                 </section>
                 <section class="mb-8">
-                    <form method="GET" action="/" class="container mx-auto px-2">
-                        <div class="flex flex-wrap -mx-2 md:w-1/2 px-2 bg-white p-4 rounded shadow">
-                            <select id="topic" class="w-full rounded px-3 py-2" name="topic" onchange="this.form.submit()">
-                                <option value="">All Topics</option>
-                                    <?php
-                                        $topics = array_unique(array_map(fn($book) => $book['topic'], $books));
-                                        foreach ($topics as $topic): ?>
-                                            <option value="<?= htmlspecialchars($topic) ?>" <?= $selectedTopic === $topic ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($topic) ?>
-                                            </option>
+                    <div class="container mx-auto px-2">
+                        <div class="-mx-2 rounded bg-[#e8e8e8] p-4 shadow md:w-1/2">
+                            <?php $topics = array_unique(array_map(fn($book) => $book['topic'], $books)); ?>
+                            <details class="group relative">
+                                <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md bg-[#f3f3f3] px-4 py-2 text-sm font-semibold text-black">
+                                    <?= htmlspecialchars($selectedTopic ?: 'All Topics') ?>
+                                    <span class="transition group-open:rotate-180">▼</span>
+                                </summary>
+                                <div class="absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-slate-300 bg-white shadow-sm">
+                                    <a href="/" class="block bg-white px-4 py-2 text-sm text-slate-950 transition hover:bg-[#e8e8e8]">
+                                        All Topics
+                                    </a>
+                                    <?php foreach ($topics as $topic): ?>
+                                        <a href="/?topic=<?= urlencode($topic) ?>" class="block bg-white px-4 p-2 text-sm text-slate-950 transition hover:bg-[#e8e8e8]">
+                                            <?= htmlspecialchars($topic) ?>
+                                        </a>
                                     <?php endforeach; ?>
-                            </select>
+                                </div>
+                            </details>
                         </div>
-                    </form>
+                    </div>
                 </section>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <?php foreach ($filteredBooks as $book): ?>
-                    <div class="bg-white p-4 rounded shadow">
+                    <div class="bg-[#e8e8e8] p-4 rounded shadow">
                         <img src="<?= htmlspecialchars($book['image_url']) ?>" alt="<?= htmlspecialchars($book['title']) ?>" class="w-full h-48 object-cover rounded mb-4">
                             <div class="p-6">
                                 <h2 class="text-xl font-bold"><?= htmlspecialchars($book['title']) ?></h2>
@@ -539,10 +558,11 @@ function fillterBookByTopic(array $books, string $topic): array
                                     <?php if (!empty($book['address_optional'])): ?>
                                         <p class="text-gray-600"><?= htmlspecialchars($book['address_optional']) ?></p>
                                     <?php endif; ?>
-                                <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onclick="window.location.href='/book-details?id=<?= htmlspecialchars($book['id']) ?>'">View Details</button>
+                                <button class="mt-4 inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800" onclick="window.location.href='/book-details?id=<?= htmlspecialchars($book['id']) ?>'">View Details</button>
                             </div>
                     </div>
                 <?php endforeach; ?>
+                </div>
             </div>
         </section>
     </main>
